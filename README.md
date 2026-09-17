@@ -149,6 +149,135 @@ The dashboard exposed information such as:
   
  ![level 1](screenshot/5001_bypass.png)
  
-# Finding
+> **Finding:** The service was vulnerable because the administrator account was protected using a `default/weak credential`.
 
->The service was vulnerable because the administrator account was protected using a `default/weak credential`.
+# Level 2 — Targeted Wordlist with CeWL
+## Objective
+The next clue pointed to:
+```
+jobs.thm:5002
+```
+It stated that Marco had created an internal employee login panel and used common company keywords as passwords.
+
+![level 1](screenshot/level2.png)
+
+## Step 1 — Enumerating the Website
+I accessed:
+```
+http://10.49.177.247:5002
+```
+The website was an Engineering Careers portal.
+
+![level 1](screenshot/5002_main.png)
+ 
+The website contained several useful keywords, including:
+- innovation
+- excellence
+- security
+- digital
+- cloud
+- future
+- talent
+
+These words were important because the challenge specifically mentioned company keywords.
+
+## Step 2 — Employee Login
+
+The website contained an Employee Login page.
+
+![level 1](screenshot/5002_login.png)
+ 
+The username was:`marco`
+
+Instead of blindly using a huge password list, I created a targeted wordlist from the website itself.
+
+## Step 3 — Generate Wordlist with CeWL
+I used CeWL to crawl the website and extract words.
+```
+cewl -d 2 -m 3 --lowercase --with-numbers \
+-w 5002_words.txt \
+http://10.49.177.247:5002
+```
+Options Used
+```
+Option	               Purpose
+
+- -d 2	              Crawl up to depth 2
+- -m 3	              Minimum word length of 3
+- --lowercase	        Convert extracted words to lowercase
+- --with-numbers	    Include words containing numbers
+- -w	                Save output to a wordlist
+
+```
+This produced:
+```
+5002_words.txt
+```
+
+## Step 4 — Attack the Login
+
+I then used Hydra with the generated wordlist:
+```
+hydra -l marco \
+-P 5002_words.txt \
+-s 5002 \
+TARGET_IP \
+http-post-form \
+"/login:username=^USER^&password=^PASS^:F=Invalid credentials"
+```
+Hydra successfully identified a valid credential.
+
+![level 1](screenshot/5002_bruteforce.png)
+ 
+## Step 5 — Employee Profile
+After successful authentication, I accessed Marco's employee profile.
+
+![level 1](screenshot/5002_bypass.png) 
+
+The profile exposed additional information about Marco.
+This information became useful in the next stage of the attack.
+
+# Level 3 — Password Profiling with CUPP
+
+## Objective
+The Level 3 clue directed me to:
+social.thm:5003
+
+![level 1](screenshot/level3.png)
+
+The login page contained a hint indicating that information from the employee portal could be used to generate Marco's password.
+
+![level 1](screenshot/5003_login.png)
+
+## Step 1 — Gather Information
+
+From the employee profile, I collected publicly available information such as:
+```
+First Name: Marco
+Surname: Bianchi
+Nickname: marky
+Birthdate: 14021995
+```
+I also found Marco's social media profile.
+ 
+His public information provided useful clues about his password habits.
+
+## Step 2 — Generate a Targeted Wordlist with CUPP
+Instead of manually creating hundreds of combinations, I used CUPP — Common User Passwords Profiler.
+```
+python3 cupp.py -i
+```
+I entered the information discovered during enumeration:
+
+- First Name: Marco
+- Surname: Bianchi
+- Nickname: marky
+- Birthdate: 14021995
+
+The remaining fields were left blank because they were not required.
+CUPP generated:
+`marco.txt`
+containing combinations based on the supplied information.
+
+![level 1](screenshot/cupptool.png)
+
