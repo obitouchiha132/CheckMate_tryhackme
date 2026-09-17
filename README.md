@@ -530,32 +530,39 @@ the predictable structure dramatically reduced the search space.
 
 # Security Recommendations
 From a defensive perspective, the issues demonstrated in this lab could be mitigated by:
-Disable Default Credentials
+## Disable Default Credentials
 Administrative interfaces should require changing default credentials during initial deployment.
-Use Strong, Random Passwords
+## Use Strong, Random Passwords
 Passwords should not be based on:
+```
 Names
 Birthdays
 Company keywords
 Predictable years
 Publicly available information
-Implement MFA
+```
+## Implement MFA
 Multi-factor authentication can significantly reduce the impact of a compromised password.
-Rate Limit Authentication
+## Rate Limit Authentication
 Login endpoints should implement:
 - Rate limiting
 - Account lockout policies
 - Progressive delays
 - Monitoring and alerting
-Avoid Predictable Password Policies
+## Avoid Predictable Password Policies
 A password such as:
+```
 Keyword + Year + !
+```
 may satisfy complexity requirements while remaining highly predictable.
-Secure Sensitive Services
+## Secure Sensitive Services
 Management interfaces and SSH should not be unnecessarily exposed and should be protected using network controls and strong authentication.
-Lessons Learned
+
+# Lessons Learned
 This room helped me practice a complete password-attack workflow rather than relying on a single tool.
+
 The most important lesson was that context matters.
+
 Instead of simply running a massive brute-force attack, I followed the clues provided by the application and progressively built a better understanding of the target:
 ```
 Service Discovery
