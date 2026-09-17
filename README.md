@@ -304,5 +304,57 @@ Hydra successfully found a valid credential.
 
 After authentication, I gained access to Marco's social media account.
 
+# Level 4 — SHA-256 Filename Cracking
+## Objective
+The Level 4 clue revealed that Marco's uploaded profile picture had been renamed using the SHA-256 hash of the original filename.
+
+![level 1](screenshot/level4.png)
+
+The resulting file was stored in the following format:
+```
+SHA256_HASH.png
+```
+The task was to recover the original filename.
+
+## Step 1 — Identify the SHA-256 Hash
+I opened Marco's profile picture in a new browser tab.
+
+The image URL contained a long SHA-256 hash:
+```
+d34a569ab7aaa54dacd715ae64953455d86b768846cd0085ef4e9e7471489b7b
+```
+![level 1](screenshot/sha256_hash.png)
+
+I extracted the hash and stored it in a file:
+**hashh.txt**
+
+## Step 2 — Crack the Hash with Hashcat
+
+I identified the hash as SHA-256 and used Hashcat mode 1400.
+```
+hashcat -m 1400 \
+-a 0 \
+hashh.txt \
+/usr/share/wordlists/rockyou.txt \
+--session=sha256
+```
+| Hashcat | Options
+|--|--|
+| Option	| Meaning
+| -m 1400	| SHA2-256 hash mode
+|-a 0	| Straight/dictionary attack
+| hashh.txt	| File containing the target hash
+| rockyou.txt	| Dictionary
+| --session=sha256	| Names the Hashcat session
+
+
+Hashcat reported:
+Status: Cracked
+Hash.Mode: 1400 (SHA2-256)
+ 
+The original filename was successfully recovered.
+
+![level 1](screenshot/cracking_hash.png)
+
 
 
