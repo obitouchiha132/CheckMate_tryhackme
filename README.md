@@ -353,8 +353,242 @@ Status: Cracked
 Hash.Mode: 1400 (SHA2-256)
  
 The original filename was successfully recovered.
-
+ 
 ![level 1](screenshot/cracking_hash.png)
 
+# Level 5 — Password Pattern Analysis & SSH
+## Objective
+The final clue revealed that Marco had publicly disclosed his password-generation pattern.
 
+The social media post explained that the password was based on: `tip`
+```
+Company keyword
+        +
+First letter capitalized
+        +
+2024
+        +
+!
+```
+This was the key to the final stage.
 
+ ![level 1](screenshot/tip.png)
+
+## Step 1 — Analyze the Password Pattern
+
+The relevant company keywords discovered earlier included:
+```
+security
+excellence
+innovation
+digital
+cloud
+```
+The pattern was:
+<Keyword with first letter capitalized>2024!
+
+Instead of using a large generic wordlist, I generated a small targeted wordlist based directly on the information disclosed by Marco.
+
+Example structure:
+```
+Security2024!
+Excellence2024!
+Innovation2024!
+Digital2024!
+Cloud2024!
+```
+## Step 2 — SSH Access
+I connected to the machine:
+```
+ssh marco@10.49.177.247
+```
+Authentication was successful.
+ 
+I then verified the current user:
+```
+whoami
+Output:marco
+```
+I also checked the user's identity and group membership:
+```
+id
+Output confirmed:uid=1001(marco) gid=1001(marco) groups=1001(marco),100(users)
+```
+
+This confirmed successful remote access as the `marco` user.
+
+ ![level 1](screenshot/ssh.png)
+
+# Attack Chain Summary
+The complete attack chain can be summarized as:
+```
+                    Reconnaissance
+                         │
+                         ▼
+              ┌────────────────────┐
+              │   Port 5001        │
+              │   FirewallOS       │
+              └─────────┬──────────┘
+                        │
+                 Default Credentials
+                        │
+                      Hydra
+                        │
+                        ▼
+              ┌────────────────────┐
+              │   Port 5002        │
+              │ Employee Portal    │
+              └─────────┬──────────┘
+                        │
+                 Company Keywords
+                        │
+                      CeWL
+                        │
+                      Hydra
+                        │
+                        ▼
+              ┌────────────────────┐
+              │   Port 5003        │
+              │ Social Platform    │
+              └─────────┬──────────┘
+                        │
+                 Personal Details
+                        │
+                       CUPP
+                        │
+                      Hydra
+                        │
+                        ▼
+               Social Media Access
+                        │
+                        ▼
+              SHA-256 Filename Hash
+                        │
+                     Hashcat
+                        │
+                        ▼
+                Filename Recovered
+                        │
+                        ▼
+               Password Pattern
+                  discovered
+                        │
+              Targeted Wordlist
+                        │
+                      Hydra
+                        │
+                        ▼
+                  SSH as marco
+                        │
+                        ▼
+                 System Access
+```
+# Tools Used
+
+| Tool | Purpose |
+|---|---|
+| **Nmap / Enumeration** | Service discovery and reconnaissance |
+| **Hydra** | Online password attacks |
+| **RockYou** | Password dictionary |
+| **CeWL** | Website-based targeted wordlist generation |
+| **CUPP** | Personal-information-based password profiling |
+| **Hashcat** | SHA-256 offline password/hash cracking |
+| **SSH** | Remote system access |
+| **Bash** | Targeted wordlist generation |
+
+Key Takeaways
+
+## 1. Default Credentials Are Dangerous
+The first stage demonstrated how dangerous default administrative credentials can be.
+A service exposed to a network should never rely on vendor or deployment defaults.
+
+## 2. Targeted Wordlists Can Be More Effective
+The Level 2 attack did not require blindly trying enormous password lists.
+Instead, information from the target website was extracted using:
+```cewl```
+This produced a smaller and more relevant wordlist.
+
+## 3. Public Information Can Help Build Password Dictionaries
+CUPP demonstrated how information such as:
+```
+Name
+Surname
+Nickname
+Birthdate
+```
+can be transformed into password candidates.
+This is why personal information should not be used directly in passwords.
+
+## 4. Password Patterns Reduce Password Entropy
+The final stage was particularly interesting because Marco had publicly revealed a predictable password-generation pattern.
+Even though the password appeared to contain:
+- Uppercase letters
+- Lowercase letters
+- Numbers
+- Special characters
+the predictable structure dramatically reduced the search space.
+
+# Security Recommendations
+From a defensive perspective, the issues demonstrated in this lab could be mitigated by:
+Disable Default Credentials
+Administrative interfaces should require changing default credentials during initial deployment.
+Use Strong, Random Passwords
+Passwords should not be based on:
+Names
+Birthdays
+Company keywords
+Predictable years
+Publicly available information
+Implement MFA
+Multi-factor authentication can significantly reduce the impact of a compromised password.
+Rate Limit Authentication
+Login endpoints should implement:
+- Rate limiting
+- Account lockout policies
+- Progressive delays
+- Monitoring and alerting
+Avoid Predictable Password Policies
+A password such as:
+Keyword + Year + !
+may satisfy complexity requirements while remaining highly predictable.
+Secure Sensitive Services
+Management interfaces and SSH should not be unnecessarily exposed and should be protected using network controls and strong authentication.
+Lessons Learned
+This room helped me practice a complete password-attack workflow rather than relying on a single tool.
+The most important lesson was that context matters.
+Instead of simply running a massive brute-force attack, I followed the clues provided by the application and progressively built a better understanding of the target:
+```
+Service Discovery
+      ↓
+Credential Enumeration
+      ↓
+Targeted Wordlist
+      ↓
+Password Profiling
+      ↓
+Hash Cracking
+      ↓
+Pattern Analysis
+      ↓
+SSH Authentication
+```
+The challenge also demonstrated how multiple small pieces of information can be combined into a successful attack chain.
+
+# Conclusion
+
+## Operation Checkmate was a practical exercise in password security assessment.
+
+The challenge covered several important penetration-testing techniques:
+- Default credential testing
+- Online password attacks
+- Targeted wordlist generation
+- Password profiling
+- OSINT-based credential analysis
+- SHA-256 hash cracking
+- Password pattern analysis
+- SSH authentication
+
+The biggest takeaway is that a password does not necessarily become secure just because it contains uppercase letters, numbers, and special characters.
+If the underlying pattern is predictable, the effective password search space can become much smaller.
+
+> Completed: Operation Checkmate
